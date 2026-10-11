@@ -1,171 +1,228 @@
 ﻿
 using System;
 
-class Personaje
+// INTERFAZ PARA CURARSE
+public interface ICurable
 {
-    // Atributos
-    private string nombre;
-    private int vida;
-    private int nivel;
-    private int ataque;
+    void Curar();
+}
 
-    // Constructor sin parámetros
-    public Personaje()
+// INTERFAZ PARA DEFENDERSE
+public interface IDefendible
+{
+    void Defender();
+}
+
+// CLASE ABSTRACTA PERSONAJE
+public abstract class Personaje
+{
+    public string Nombre { get; private set; }
+    public int Vida { get; private set; }
+    public int Nivel { get; private set; }
+
+    public Personaje(string nombre, int vida, int nivel)
     {
-        nombre = "Personaje";
-        vida = 100;
-        nivel = 1;
-        ataque = 10;
+        if (vida < 1 || vida > 100)
+        {
+            throw new ArgumentException("La vida debe estar entre 1 y 100.");
+        }
+
+        if (nivel < 1)
+        {
+            throw new ArgumentException("El nivel debe ser minimo 1.");
+        }
+
+        Nombre = nombre;
+        Vida = vida;
+        Nivel = nivel;
     }
 
-    // Constructor que recibe solo el nombre
-    public Personaje(string nombre)
+    public void MostrarEstado()
     {
-        this.nombre = nombre;
-        vida = 100;
-        nivel = 1;
-        ataque = 10;
+        Console.WriteLine("Nombre: " + Nombre);
+        Console.WriteLine("Vida: " + Vida);
+        Console.WriteLine("Nivel: " + Nivel);
     }
 
-    // Constructor que recibe todos los datos
-    public Personaje(string nombre, int vida, int nivel, int ataque)
-    {
-        this.nombre = nombre;
-        this.vida = vida;
-        this.nivel = nivel;
-        this.ataque = ataque;
-    }
+    public abstract void Atacar();
 
-    // Muestra la información del personaje
-    public void MostrarInformacion()
-    {
-        Console.WriteLine("Nombre: " + nombre);
-        Console.WriteLine("Vida: " + vida);
-        Console.WriteLine("Nivel: " + nivel);
-        Console.WriteLine("Ataque: " + ataque);
-        Console.WriteLine();
-    }
-
-    // Recibe daño
     public void RecibirDanio(int cantidad)
     {
-        vida = vida - cantidad;
-
-        if (vida < 0)
+        if (cantidad <= 0 || Vida == 0)
         {
-            vida = 0;
+            return;
         }
 
-        Console.WriteLine(nombre + " recibió " + cantidad + " puntos de daño.");
-    }
+        Console.WriteLine(Nombre + " recibe " + cantidad + " puntos de daño.");
 
-    // Cura al personaje
-    public void Curar(int cantidad)
-    {
-        vida = vida + cantidad;
+        Vida = Vida - cantidad;
 
-        Console.WriteLine(nombre + " recuperó " + cantidad + " puntos de vida.");
-    }
-
-    // Sube de nivel
-    public void SubirNivel()
-    {
-        nivel = nivel + 1;
-        ataque = ataque + 5;
-
-        Console.WriteLine(nombre + " subió de nivel.");
-    }
-
-    // Ataca a otro personaje
-    public void Atacar(Personaje enemigo)
-    {
-        Console.WriteLine(nombre + " atacó a " + enemigo.nombre + ".");
-        enemigo.RecibirDanio(ataque);
-    }
-
-    // Retorna la vida actual
-    public int ObtenerVida()
-    {
-        return vida;
-    }
-
-    // Comprueba si el personaje está vivo
-    public bool EstaVivo()
-    {
-        if (vida > 0)
+        if (Vida < 0)
         {
-            return true;
+            Vida = 0;
         }
-        else
+
+        Console.WriteLine("Vida restante: " + Vida);
+
+        if (Vida == 0)
         {
-            return false;
+            Console.WriteLine(Nombre + " ha sido derrotado.");
+        }
+    }
+
+    public void RecuperarVida(int cantidad)
+    {
+        if (cantidad <= 0 || Vida == 100)
+        {
+            return;
+        }
+
+        Vida = Vida + cantidad;
+
+        if (Vida > 100)
+        {
+            Vida = 100;
         }
     }
 }
 
+// CLASE GUERRERO
+public class Guerrero : Personaje, IDefendible
+{
+    public int Fuerza { get; set; }
+
+    public Guerrero(string nombre, int vida, int nivel, int fuerza)
+        : base(nombre, vida, nivel)
+    {
+        Fuerza = fuerza;
+    }
+
+    public override void Atacar()
+    {
+        Console.WriteLine(Nombre + " ataca con su espada causando 30 puntos de daño.");
+    }
+
+    public void Defender()
+    {
+        Console.WriteLine(Nombre + " levanta su escudo y se prepara para defenderse.");
+    }
+}
+
+// CLASE MAGO
+public class Mago : Personaje, ICurable
+{
+    public int Mana { get; set; }
+
+    public Mago(string nombre, int vida, int nivel, int mana)
+        : base(nombre, vida, nivel)
+    {
+        Mana = mana;
+    }
+
+    public override void Atacar()
+    {
+        Console.WriteLine(Nombre + " lanza un hechizo causando 40 puntos de daño.");
+    }
+
+    public void Curar()
+    {
+        int vidaAntes = Vida;
+
+        if (Vida == 100)
+        {
+            Console.WriteLine(Nombre + " ya tiene la vida completa.");
+            return;
+        }
+
+        RecuperarVida(20);
+
+        Console.WriteLine(Nombre + " utiliza magia de curacion.");
+        Console.WriteLine("Vida recuperada: " + (Vida - vidaAntes));
+        Console.WriteLine("Vida actual: " + Vida);
+    }
+}
+
+// CLASE ARQUERO
+public class Arquero : Personaje
+{
+    public int Flechas { get; private set; }
+
+    public Arquero(string nombre, int vida, int nivel, int flechas)
+        : base(nombre, vida, nivel)
+    {
+        if (flechas < 0)
+        {
+            throw new ArgumentException("Las flechas no pueden ser negativas.");
+        }
+
+        Flechas = flechas;
+    }
+
+    public override void Atacar()
+    {
+        if (Flechas == 0)
+        {
+            Console.WriteLine(Nombre + " no tiene flechas para disparar.");
+            return;
+        }
+
+        Console.WriteLine(Nombre + " dispara una flecha causando 25 puntos de daño.");
+
+        Flechas = Flechas - 1;
+
+        Console.WriteLine("Flechas restantes: " + Flechas);
+    }
+}
+
+// PROGRAMA PRINCIPAL
 class Program
 {
     static void Main(string[] args)
     {
-        // Crear tres personajes usando los diferentes constructores
-        Personaje kratos = new Personaje();
-        Personaje mario = new Personaje("Mario");
-        Personaje link = new Personaje("Link", 110, 2, 18);
+        Guerrero guerrero = new Guerrero("Kratos", 100, 5, 30);
+        Mago mago = new Mago("Merlin", 80, 6, 50);
+        Arquero arquero = new Arquero("Legolas", 90, 4, 10);
 
-        Console.WriteLine("=== Estado inicial ===");
+        Personaje[] personajes = { guerrero, mago, arquero };
+
+        Console.WriteLine("===== PERSONAJES =====");
         Console.WriteLine();
 
-        Console.WriteLine("Kratos");
-        kratos.MostrarInformacion();
+        foreach (Personaje personaje in personajes)
+        {
+            personaje.MostrarEstado();
+            personaje.Atacar();
 
-        Console.WriteLine("Mario");
-        mario.MostrarInformacion();
+            Console.WriteLine("--------------------");
+            Console.WriteLine();
+        }
 
-        Console.WriteLine("Link");
-        link.MostrarInformacion();
-
-        Console.WriteLine("=== Combate===");
+        Console.WriteLine("===== HABILIDADES =====");
         Console.WriteLine();
 
-        // Kratos ataca a Mario
-        kratos.Atacar(mario);
-        Console.WriteLine();
-
-        // Mario ataca a Kratos
-        mario.Atacar(kratos);
-        Console.WriteLine();
-
-        // Mario se cura
-        mario.Curar(20);
-        Console.WriteLine();
-
-        // Link sube de nivel
-        link.SubirNivel();
-        Console.WriteLine();
-
-        Console.WriteLine("=== Estado final ===");
-        Console.WriteLine();
-
-        Console.WriteLine("Kratos");
-        kratos.MostrarInformacion();
-
-        Console.WriteLine("Mario");
-        mario.MostrarInformacion();
-
-        Console.WriteLine("Link");
-        link.MostrarInformacion();
-
-        Console.WriteLine("=== Personajes vivos ===");
-        Console.WriteLine();
-
-        Console.WriteLine("Kratos está vivo: " + kratos.EstaVivo());
-        Console.WriteLine("Mario está vivo: " + mario.EstaVivo());
-        Console.WriteLine("Link está vivo: " + link.EstaVivo());
+        guerrero.Defender();
 
         Console.WriteLine();
 
-        // También podemos obtener la vida de un personaje
-        Console.WriteLine("La vida actual de Kratos es: " + kratos.ObtenerVida());
+        mago.RecibirDanio(30);
+
+        Console.WriteLine();
+
+        mago.Curar();
+
+        Console.WriteLine();
+
+        Console.WriteLine("===== PRUEBA DEL ARQUERO =====");
+
+        for (int i = 0; i < 11; i++)
+        {
+            arquero.Atacar();
+        }
+
+        Console.WriteLine();
+
+        Console.WriteLine("===== PRUEBA DE DAÑO =====");
+
+        guerrero.RecibirDanio(30);
     }
 }
-
